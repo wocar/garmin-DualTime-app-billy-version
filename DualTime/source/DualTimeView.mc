@@ -11,10 +11,10 @@ import Toybox.WatchUi;
 */
 class DualTimeView extends WatchUi.WatchFace {
     // Default variables
-    var defaultTimezone = "United Kingdom";
-    var defaultTimezoneCode = "GB";
-    var defaultTimezoneLatitude = 51.5;
-    var defaultTimezoneLongtitude = -0.0833;
+    var defaultTimezone = "Mexico ET";
+    var defaultTimezoneCode = "ME";
+    var defaultTimezoneLatitude = 21.17429;
+    var defaultTimezoneLongtitude = -86.84656;
     var timeFormat = "$1$:$2$";
 
     // System variables
@@ -33,12 +33,12 @@ class DualTimeView extends WatchUi.WatchFace {
     var widthScreen;
     var heightScreen;
     var timeDividerWidth = 2;
-    var timeDividerMarginRight = 10;
+    var timeDividerMarginRight = 15;
     var batteryWidth = 20;
     var batteryIconHeight = 10;
     var batteryPinWidth = 2;
     var batteryIconPinHeight = 5;
-    var primaryTimeMarginRight = 10;
+    var primaryTimeMarginRight = 15;
     var secondaryTimeMarginBottom = 3;
 
     // Font variables
@@ -92,10 +92,12 @@ class DualTimeView extends WatchUi.WatchFace {
         dc.setColor(Graphics.COLOR_TRANSPARENT, backgroundColor as Number);
         dc.clear();
 
-        var clockTime = System.getClockTime();
+        var swapTimes = Storage.getValue("swapTimes") ? true : false;
+
+        var primaryTimeString = getPrimaryTimeString(System.getClockTime());
+        var secondaryTimeString = getSecondaryTimeString();
 
         // Primary time details
-        var primaryTimeString = getPrimaryTimeString(clockTime);
         var primaryTimeStringWidth = dc.getTextWidthInPixels(primaryTimeString, primaryTimeFont);
         var primaryTimeStringHeight = dc.getFontHeight(primaryTimeFont);
         // Device specific pixel offset
@@ -105,7 +107,6 @@ class DualTimeView extends WatchUi.WatchFace {
         var dividerHeight = primaryTimeStringHeight - primaryTimeStringHeightOffset.toNumber();
 
         // Secondary time details
-        var secondaryTimeString = getSecondaryTimeString();
         var secondaryTimeStringWidth = dc.getTextWidthInPixels(secondaryTimeString, secondaryTimeFont);
         var secondaryTimeStringHeight = dc.getFontHeight(secondaryTimeFont);
 
@@ -114,12 +115,88 @@ class DualTimeView extends WatchUi.WatchFace {
         // The starting position in order for the total printed area to be centered in the screen
         var xCoordinateStartingPosition = (widthScreen - totalPrintedAreaWidth)/2;
 
+        var primaryTimeStartY = heightScreen/2 - primaryTimeStringHeight/2;
+        var primaryTimeEndY = primaryTimeStartY + primaryTimeStringHeight - primaryTimeStringHeightOffset.toNumber();
+        var secondaryStartX = xCoordinateStartingPosition + primaryTimeStringWidth + primaryTimeMarginRight + timeDividerWidth + timeDividerMarginRight;
+        primaryTimeEndY -=30;
+ 
+        // Draw timezones
+        dc.setColor(foregroundColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(secondaryStartX + secondaryTimeStringWidth / 2, primaryTimeEndY - 10, dateFont, secondaryTimezoneCode, Graphics.TEXT_JUSTIFY_CENTER);
+
+        
+
+
+        // Draw the primary time
+        drawTime(
+            dc,
+            primaryTimeString,
+            xCoordinateStartingPosition,
+            primaryTimeStartY, 
+            primaryTimeStringHeight,
+            primaryTimeFont
+        );
+
+        // Draw the secondary time
+        drawTime(
+            dc,
+            secondaryTimeString,
+            secondaryStartX,
+            heightScreen/2 - secondaryTimeStringHeight/2,
+            secondaryTimeStringHeight,
+            secondaryTimeFont
+        );
+        // Draw the divider
+        drawTimeDivider(
+            dc,
+            xCoordinateStartingPosition + primaryTimeStringWidth + primaryTimeMarginRight,
+            dividerHeight
+        );
+        
+
+
+        var dateY = heightScreen - dc.getFontHeight(dateFont);
+
+
+        // Draw the date
+        drawDate(
+            dc,
+            widthScreen / 2,
+            (heightScreen - dc.getFontHeight(dateFont)) - 20
+
+         //   (heightScreen/2 - dividerHeight/2) - 40
+        );
         // Draw the battery icon at the top
         drawBattery(
             dc,
             widthScreen/2 - (batteryWidth+batteryPinWidth)/2,
             10
         );
+    }
+    /* function drawStrategy1(dc as Dc) as Void {
+
+        var primaryTimeString = getPrimaryTimeString(System.getClockTime());
+        var secondaryTimeString = getSecondaryTimeString();
+
+        // Primary time details
+        var primaryTimeStringWidth = dc.getTextWidthInPixels(primaryTimeString, primaryTimeFont);
+        var primaryTimeStringHeight = dc.getFontHeight(primaryTimeFont);
+        // Device specific pixel offset
+        var primaryTimeStringHeightOffset = WatchUi.loadResource(Rez.Strings.primaryTimeStringHeightOffset);
+
+        // Divider details
+        var dividerHeight = primaryTimeStringHeight - primaryTimeStringHeightOffset.toNumber();
+
+        // Secondary time details
+        var secondaryTimeStringWidth = dc.getTextWidthInPixels(secondaryTimeString, secondaryTimeFont);
+        var secondaryTimeStringHeight = dc.getFontHeight(secondaryTimeFont);
+
+        // The total printed width (Primary time + Divider + Secondary time)
+        var totalPrintedAreaWidth = primaryTimeStringWidth + primaryTimeMarginRight + timeDividerWidth + timeDividerMarginRight + secondaryTimeStringWidth;
+        // The starting position in order for the total printed area to be centered in the screen
+        var xCoordinateStartingPosition = (widthScreen - totalPrintedAreaWidth)/2;
+
+
 
         // Draw the primary time
         drawTime(
@@ -137,11 +214,14 @@ class DualTimeView extends WatchUi.WatchFace {
             dividerHeight
         );
 
+        var dateY = heightScreen/2 - dividerHeight/2;
+        var dateStrheight = dc.getFontHeight(dateFont);
+
         // Draw the date
         drawDate(
             dc,
             xCoordinateStartingPosition + primaryTimeStringWidth + primaryTimeMarginRight + timeDividerWidth + timeDividerMarginRight + secondaryTimeStringWidth/2,
-            heightScreen/2 - dividerHeight/2
+            dateY
         );
 
         // Draw the secondary time
@@ -149,11 +229,11 @@ class DualTimeView extends WatchUi.WatchFace {
             dc,
             secondaryTimeString,
             xCoordinateStartingPosition + primaryTimeStringWidth + primaryTimeMarginRight + timeDividerWidth + timeDividerMarginRight,
-            heightScreen/2 + dividerHeight/2 - secondaryTimeStringHeight + secondaryTimeMarginBottom,
+            dateY + dateStrheight,
             secondaryTimeStringHeight,
             secondaryTimeFont
         );
-    }
+    } */
 
     /**
     * Converts the hour into 24 hour format.
@@ -231,7 +311,7 @@ class DualTimeView extends WatchUi.WatchFace {
             hours = convertTo24HourTimeFormat(hours);
         }
 
-        var timeString = secondaryTimezoneCode + " " + Lang.format(timeFormat, [hours.format("%02d"), minutes.format("%02d")]);
+        var timeString =  Lang.format(timeFormat, [hours.format("%02d"), minutes.format("%02d")]);
 
         return timeString;
     }
@@ -262,7 +342,7 @@ class DualTimeView extends WatchUi.WatchFace {
     function drawDate(dc, startingX, startingY) {
         var now = Time.now();
         var dateInfo = Time.Gregorian.info(now, Time.FORMAT_LONG);
-        var dateStr = Lang.format("$1$ $2$", [dateInfo.day_of_week, dateInfo.day.format("%02d")]);
+        var dateStr = Lang.format("$1$ $2$ $3$", [dateInfo.day_of_week, dateInfo.day.format("%02d"), dateInfo.month]);
         var dateStrWidth = dc.getTextWidthInPixels(dateStr, dateFont);
         var dateStrheight = dc.getFontHeight(dateFont);
 

@@ -42,10 +42,13 @@ class DualTimeSettingsDelegate extends WatchUi.BehaviorDelegate {
         // Get the current state of the negativeDisplay attribute from the storage
         var negativeDisplay = Storage.getValue("negativeDisplay") ? true : false;
 
+        var swapTimes = Storage.getValue("swapTimes") ? true : false;
+
         // Add menu items
         menu.addItem(new WatchUi.ToggleMenuItem("Negative Display", null, "negativeDisplay", negativeDisplay, {:alignment => WatchUi.MenuItem.MENU_ITEM_LABEL_ALIGN_RIGHT}));
+        menu.addItem(new WatchUi.ToggleMenuItem("Swap display", null, "swapTimes", swapTimes, {:alignment => WatchUi.MenuItem.MENU_ITEM_LABEL_ALIGN_RIGHT}));
         menu.addItem(new WatchUi.MenuItem("Secondary Timezone", null, "secondaryTimezone", {:alignment => WatchUi.MenuItem.MENU_ITEM_LABEL_ALIGN_RIGHT}));
-
+        
         // Push the settings view
         WatchUi.pushView(menu, new DualTimeSettingsAlphabeticalMenuDelegate(), WatchUi.SLIDE_UP);
         return true;
@@ -69,6 +72,10 @@ class DualTimeSettingsAlphabeticalMenuDelegate extends WatchUi.Menu2InputDelegat
             // If the 'negativeDisplay' toggle is flipped, change the value in the storage
             var negativeDisplay = Storage.getValue("negativeDisplay") ? false : true;
             Storage.setValue(id as Number, negativeDisplay);
+
+        } else if (id.equals("swapTimes")) {
+            var swapTimes = Storage.getValue("swapTimes") ? false : true;
+            Storage.setValue(id as Number, swapTimes);
 
         } else if (id.equals("secondaryTimezone")) {
             // If the 'secondaryTimezone' option is selected, dynamically generate a
@@ -254,7 +261,7 @@ class CustomItem extends WatchUi.CustomMenuItem {
     public function draw(dc as Dc) as Void {
         var font = Graphics.FONT_TINY;
         if (isFocused()) {
-            font = Graphics.FONT_SMALL;
+            font = Graphics.FONT_MEDIUM;
         }
 
         if (isSelected()) {
